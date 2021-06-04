@@ -1,3 +1,51 @@
+- name: Test for existence /etc/postfix/main.cf
+  stat:
+    path: /etc/postfix/main.cf
+  register: file_exists
+  when:
+  - enable_strategy | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - package_aide_installed | bool
+  - ansible_virtualization_type not in ["docker", "lxc", "openvz", "podman", "container"]
+  tags:
+  - CCE-27096-7
+  - CJIS-5.10.1.3
+  - NIST-800-53-CM-6(a)
+  - PCI-DSS-Req-11.5
+  - enable_strategy
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+
+- name: Prevent Unrestricted Mail Relaying
+  ansible.builtin.lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^smtpd_client_restrictions'
+    line: smtpd_client_restrictions = permit_mynetworks,reject
+  when:
+  - enable_strategy | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - package_aide_installed | bool
+  - ansible_virtualization_type not in ["docker", "lxc", "openvz", "podman", "container"]
+  - file_exists.stat is defined and file_exists.stat.exists
+  tags:
+  - CCE-27096-7
+  - CJIS-5.10.1.3
+  - NIST-800-53-CM-6(a)
+  - PCI-DSS-Req-11.5
+  - enable_strategy
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+
 - name: 'Set fact: Package manager reinstall command (dnf)'
   set_fact:
     package_manager_reinstall_cmd: dnf reinstall -y
@@ -8,7 +56,7 @@
   - no_reboot_needed | bool
   - restrict_strategy | bool
   - rpm_verify_hashes | bool
-  - ansible_distribution == "Fedora"
+  - (ansible_distribution == "Fedora" or ansible_distribution == "OracleLinux")
   tags:
   - CCE-27157-7
   - CJIS-5.10.4.1
@@ -136,6 +184,7 @@
 
 - name: Reinstall packages of files with incorrect hash
   command: '{{ package_manager_reinstall_cmd }} ''{{ item }}'''
+  ignore_errors: True
   args:
     warn: false
   with_items: '{{ list_of_packages.results | map(attribute=''stdout_lines'') | list | unique }}'
@@ -2439,7 +2488,7 @@
   - no_reboot_needed | bool
   - unknown_strategy | bool
 
-- name: Check existence of yum on Fedora
+- name: Check existence of yum on Fedora and OracleLinux
   stat:
     path: /etc/yum.conf
   register: yum_config_file
@@ -2452,7 +2501,7 @@
   - no_reboot_needed | bool
   - unknown_strategy | bool
   - '"yum" in ansible_facts.packages'
-  - ansible_distribution == "Fedora"
+  - (ansible_distribution == "Fedora" or ansible_distribution == "OracleLinux")
   tags:
   - CCE-80347-8
   - DISA-STIG-RHEL-07-020060
@@ -2518,7 +2567,7 @@
   - no_reboot_needed | bool
   - unknown_strategy | bool
   - '"yum" in ansible_facts.packages'
-  - ansible_distribution == "Fedora"
+  - (ansible_distribution == "Fedora" or ansible_distribution == "OracleLinux")
   tags:
   - CCE-80347-8
   - DISA-STIG-RHEL-07-020060
@@ -2568,7 +2617,7 @@
   - no_reboot_needed | bool
   - unknown_strategy | bool
 
-- name: Check existence of yum on Fedora
+- name: Check existence of yum on Fedora and Oracle Linux
   stat:
     path: /etc/yum.conf
   register: yum_config_file
@@ -2581,7 +2630,7 @@
   - no_reboot_needed | bool
   - unknown_strategy | bool
   - '"yum" in ansible_facts.packages'
-  - ansible_distribution == "Fedora"
+  - (ansible_distribution == "Fedora" or ansible_distribution == "OracleLinux")
   tags:
   - CCE-26989-4
   - CJIS-5.10.4.1
@@ -2659,7 +2708,7 @@
   - no_reboot_needed | bool
   - unknown_strategy | bool
   - '"yum" in ansible_facts.packages'
-  - ansible_distribution == "Fedora"
+  - (ansible_distribution == "Fedora" or ansible_distribution == "OracleLinux")
   tags:
   - CCE-26989-4
   - CJIS-5.10.4.1
@@ -20397,3 +20446,100 @@
   - medium_disruption
   - no_reboot_needed
   - snmpd_not_default_password
+
+
+- name: Test for existence /etc/ntp.conf
+  stat:
+    path: /etc/ntp.conf
+  register: file_exists
+  when:
+  - enable_strategy | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - package_aide_installed | bool
+  - ansible_virtualization_type not in ["docker", "lxc", "openvz", "podman", "container"]
+  tags:
+  - CCE-27096-7
+  - CJIS-5.10.1.3
+  - NIST-800-53-CM-6(a)
+  - PCI-DSS-Req-11.5
+  - enable_strategy
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+
+- name: Set maxpool parameter for ntpd
+  ansible.builtin.lineinfile:
+    path: /etc/ntp.conf
+    regexp: '^maxpoll'
+    line: maxpoll 10
+  when:
+  - enable_strategy | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - package_aide_installed | bool
+  - ansible_virtualization_type not in ["docker", "lxc", "openvz", "podman", "container"]
+  - file_exists.stat is defined and file_exists.stat.exists
+  tags:
+  - CCE-27096-7
+  - CJIS-5.10.1.3
+  - NIST-800-53-CM-6(a)
+  - PCI-DSS-Req-11.5
+  - enable_strategy
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+
+- name: Test for existence /etc/chrony.conf
+  stat:
+    path: /etc/chrony.conf
+  register: file_exists
+  when:
+  - enable_strategy | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - package_aide_installed | bool
+  - ansible_virtualization_type not in ["docker", "lxc", "openvz", "podman", "container"]
+  tags:
+  - CCE-27096-7
+  - CJIS-5.10.1.3
+  - NIST-800-53-CM-6(a)
+  - PCI-DSS-Req-11.5
+  - enable_strategy
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+
+- name: Set maxpool parameter for chrony
+  ansible.builtin.lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^maxpoll'
+    line: maxpoll 10
+  when:
+  - enable_strategy | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - package_aide_installed | bool
+  - ansible_virtualization_type not in ["docker", "lxc", "openvz", "podman", "container"]
+  - file_exists.stat is defined and file_exists.stat.exists
+  tags:
+  - CCE-27096-7
+  - CJIS-5.10.1.3
+  - NIST-800-53-CM-6(a)
+  - PCI-DSS-Req-11.5
+  - enable_strategy
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
